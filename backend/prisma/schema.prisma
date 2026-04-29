@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  super_admin
+  admin
+  member
+  viewer
+}
+
+enum LifeosRecordType {
+  agenda_type
+  routine
+  schedule
+  todo
+  completion
+  free_note
+  ai_note
+  list
+  para_project
+  para_area
+  para_task
+  para_activity
+  para_resource
+  para_archive
+  archive_classification
+  archive_jra
+  archive_physical_reference
+  archive_borrowing
+  archive_disposition
+  archive_move_log
+}
+
+enum AssetStatus {
+  uploaded
+  queued
+  extracting
+  ready
+  failed
+}
+
+enum AssetExtractionStatus {
+  pending
+  extracting
+  completed
+  unsupported
+  failed
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         UserRole      @default(member)
+  phone        String?
+  address      String?
+  apiKey       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  refreshTokens RefreshToken[]
+  records      LifeosRecord[]
+  uploads      Upload[]
+  assets       Asset[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AppSettings {
+  id           String   @id @default("global")
+  name         String   @default("LifeOS")
+  navSub       String   @default("Integrated Edition")
+  loginSub     String   @default("Ultimate")
+  motto        String   @default("Design Your Life, Manage Your Resources")
+  welcomeTitle String   @default("Selamat Datang")
+  welcomeSub   String   @default("Silakan masuk menggunakan User ID dan Password Anda.")
+  footerText   String   @default("© 2026 LifeOS System")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model LifeosRecord {
+  id        String           @id @default(cuid())
+  userId    String
+  type      LifeosRecordType
+  title     String?
+  date      DateTime?
+  payload   Json
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([userId, type, date])
+}
+
+model Upload {
+  id           String   @id @default(cuid())
+  userId       String
+  originalName String
+  storedName   String
+  mimeType     String
+  size         Int
+  path         String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Asset {
+  id           String      @id @default(cuid())
+  userId       String
+  bucket       String
+  objectKey    String      @unique
+  originalName String
+  mimeType     String
+  size         Int
+  checksum     String
+  status       AssetStatus @default(uploaded)
+  source       String      @default("upload")
+  context      String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  extraction   AssetExtraction?
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@index([checksum])
+}
+
+model AssetExtraction {
+  id           String                @id @default(cuid())
+  assetId      String                @unique
+  status       AssetExtractionStatus @default(pending)
+  extractedText String?
+  summary      String?
+  metadata     Json?
+  error        String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  asset        Asset                 @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}

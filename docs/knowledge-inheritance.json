@@ -1,0 +1,764 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-04-29",
+  "project": {
+    "name": "LifeOS",
+    "repositoryRoot": "D:/App/lifeos-project",
+    "summary": "Integrated personal operating system for planner, notes, productivity, resources, archives, assets, and AI assistance.",
+    "currentStage": "Frontend-heavy app refactored into feature modules with a new NestJS backend, PostgreSQL persistence, MinIO asset storage, and Redis/BullMQ extraction queue."
+  },
+  "technologyStack": {
+    "frontend": {
+      "framework": "React 19",
+      "bundler": "Vite 8 beta",
+      "language": "JavaScript JSX",
+      "styling": "Tailwind CSS classes and CSS files",
+      "icons": "lucide-react",
+      "qrScanner": "html5-qrcode",
+      "statePattern": "React state plus custom localStorage/API sync hooks",
+      "importantPackages": [
+        "react",
+        "react-dom",
+        "vite",
+        "lucide-react",
+        "html5-qrcode",
+        "tailwindcss"
+      ]
+    },
+    "backend": {
+      "framework": "NestJS 11",
+      "language": "TypeScript",
+      "database": "PostgreSQL 16",
+      "orm": "Prisma 6",
+      "auth": "JWT access token, JWT refresh token, Argon2 password hashing",
+      "assetStorage": "S3-compatible storage via MinIO locally",
+      "queue": "Redis 7 plus BullMQ",
+      "security": "Helmet, CORS, validation pipe, JWT guard, role guard",
+      "importantPackages": [
+        "@nestjs/common",
+        "@nestjs/core",
+        "@nestjs/config",
+        "@nestjs/jwt",
+        "@nestjs/passport",
+        "@prisma/client",
+        "prisma",
+        "argon2",
+        "@aws-sdk/client-s3",
+        "bullmq",
+        "ioredis",
+        "helmet"
+      ]
+    },
+    "localInfrastructure": {
+      "composeProjectName": "lifeos",
+      "postgres": {
+        "container": "lifeos-postgres",
+        "hostPort": 55432,
+        "containerPort": 5432,
+        "database": "lifeos",
+        "user": "postgres"
+      },
+      "redis": {
+        "container": "lifeos-redis",
+        "hostPort": 6380,
+        "containerPort": 6379
+      },
+      "minio": {
+        "container": "lifeos-minio",
+        "apiUrl": "http://localhost:9002",
+        "consoleUrl": "http://localhost:9003",
+        "bucket": "lifeos-assets",
+        "accessKey": "lifeos"
+      }
+    }
+  },
+  "sourceMap": {
+    "frontend": {
+      "root": "frontend/src",
+      "entry": "frontend/src/main.jsx",
+      "app": "frontend/src/App.jsx",
+      "apiClient": "frontend/src/lib/apiClient.js",
+      "utilities": "frontend/src/lib/lifeosUtils.js",
+      "sharedComponents": "frontend/src/components/shared.jsx",
+      "featureModules": {
+        "dashboard": "frontend/src/features/dashboard/Dashboard.jsx",
+        "planner": "frontend/src/features/planner/Planner.jsx",
+        "notes": "frontend/src/features/notes/NotesManager.jsx",
+        "productivity": "frontend/src/features/productivity/ProductivityManager.jsx",
+        "fileControl": "frontend/src/features/fileControl/FileControlManager.jsx",
+        "resources": "frontend/src/features/resources/ResourceComponents.jsx",
+        "settings": "frontend/src/features/settings/SettingsManager.jsx"
+      },
+      "largeFilesToRefactorLater": [
+        {
+          "path": "frontend/src/features/fileControl/FileControlManager.jsx",
+          "approxLines": 11300,
+          "reason": "Contains archive workflow, physical references, QR/scanning, borrowing, disposition, move, arrangement, and multiple modals in one file."
+        },
+        {
+          "path": "frontend/src/features/productivity/ProductivityManager.jsx",
+          "approxLines": 5006,
+          "reason": "Contains PARA area/project/resource/archive views, detail modals, task workflow, and AI resource helpers in one file."
+        },
+        {
+          "path": "frontend/src/features/planner/Planner.jsx",
+          "approxLines": 2349,
+          "reason": "Contains calendar, schedule, routines, todo, planner tabs, and quick productivity task modal."
+        },
+        {
+          "path": "frontend/src/features/settings/SettingsManager.jsx",
+          "approxLines": 1745,
+          "reason": "Contains settings UI, user/profile/app config, global search, and chatbot."
+        },
+        {
+          "path": "frontend/src/features/notes/NotesManager.jsx",
+          "approxLines": 1509,
+          "reason": "Contains notes, AI notes, audio recording, extraction, summaries, and lists."
+        }
+      ]
+    },
+    "backend": {
+      "root": "backend/src",
+      "entry": "backend/src/main.ts",
+      "moduleRoot": "backend/src/app.module.ts",
+      "prismaSchema": "backend/prisma/schema.prisma",
+      "prismaConfig": "backend/prisma.config.ts",
+      "seed": "backend/prisma/seed.ts",
+      "dockerCompose": "backend/docker-compose.yml",
+      "modules": {
+        "auth": "backend/src/auth",
+        "users": "backend/src/users",
+        "settings": "backend/src/settings",
+        "records": "backend/src/records",
+        "uploads": "backend/src/uploads",
+        "storage": "backend/src/storage",
+        "extraction": "backend/src/extraction",
+        "health": "backend/src/health",
+        "prisma": "backend/src/prisma",
+        "common": "backend/src/common"
+      }
+    },
+    "documentation": {
+      "prd": "docs/PRODUCT_REQUIREMENTS.md",
+      "knowledgeInheritance": "docs/knowledge-inheritance.json"
+    }
+  },
+  "frontendArchitecture": {
+    "routing": {
+      "type": "Internal state routing in Dashboard",
+      "mainViewStateKey": "lifeos-view",
+      "views": [
+        "overview",
+        "planner",
+        "notes",
+        "productivity",
+        "file_control",
+        "settings"
+      ],
+      "codeSplitting": "React.lazy and Suspense per feature module from Dashboard."
+    },
+    "authSession": {
+      "storageKey": "lifeos-auth",
+      "legacyUserStorageKey": "lifeos-user",
+      "loginFlow": [
+        "App submits email/password to api.login",
+        "api.login stores auth session in localStorage",
+        "App loads users and app settings from backend",
+        "Dashboard receives current user and app settings"
+      ]
+    },
+    "stateManagement": {
+      "owner": "Dashboard owns most domain state and passes props/setters to feature modules.",
+      "hooks": {
+        "useStickyState": "Persists UI/session-like state to localStorage.",
+        "useUserAwareState": "Hydrates domain data from API records, writes API cache to localStorage, and debounces bulk sync to backend."
+      },
+      "apiCachePrefix": "lifeos-api-cache:<userId>:<storageKey>",
+      "syncDebounceMs": 700,
+      "domainStorageKeyToRecordType": {
+        "lifeos-types": "agenda_type",
+        "lifeos-routines": "routine",
+        "lifeos-schedules": "schedule",
+        "lifeos-todos": "todo",
+        "lifeos-completions": "completion",
+        "lifeos-freenotes": "free_note",
+        "lifeos-ainotes": "ai_note",
+        "lifeos-lists": "list",
+        "lifeos-para-projects": "para_project",
+        "lifeos-para-areas": "para_area",
+        "lifeos-para-tasks": "para_task",
+        "lifeos-para-activities": "para_activity",
+        "lifeos-para-resources": "para_resource",
+        "lifeos-para-archives": "para_archive",
+        "lifeos-archive-classifications": "archive_classification",
+        "lifeos-archive-jra": "archive_jra",
+        "lifeos-archive-physical": "archive_physical_reference",
+        "lifeos-archive-borrowings": "archive_borrowing",
+        "lifeos-archive-dispositions": "archive_disposition",
+        "lifeos-archive-movelogs": "archive_move_log"
+      }
+    },
+    "features": {
+      "dashboard": {
+        "responsibilities": [
+          "Application shell and sidebar navigation",
+          "Overview widgets",
+          "Dark mode",
+          "Notifications dropdown",
+          "Global module state",
+          "External app navigation event listener",
+          "Lazy module loading"
+        ],
+        "stateOwned": [
+          "view",
+          "plannerTab",
+          "settingsTab",
+          "productivityTab",
+          "currentDate",
+          "agendaTypes",
+          "routines",
+          "schedules",
+          "todos",
+          "completions",
+          "freeNotes",
+          "aiNotes",
+          "lists",
+          "projects",
+          "projectTasks",
+          "activities",
+          "resources",
+          "archives"
+        ]
+      },
+      "planner": {
+        "tabs": [
+          "daily",
+          "schedule",
+          "routines",
+          "todo",
+          "reference"
+        ],
+        "responsibilities": [
+          "Daily agenda",
+          "Schedule management",
+          "Routine master and routine freeze periods",
+          "Todo management",
+          "Productivity task quick add",
+          "Resource attachment in planner context"
+        ]
+      },
+      "notes": {
+        "tabs": [
+          "free",
+          "ai",
+          "lists"
+        ],
+        "responsibilities": [
+          "Free notes",
+          "AI notes",
+          "Audio recording",
+          "Gemini transcription",
+          "File extraction via Gemini",
+          "Summary generation",
+          "Free lists"
+        ]
+      },
+      "productivity": {
+        "tabs": [
+          "overview",
+          "projects",
+          "areas",
+          "resources",
+          "archives"
+        ],
+        "responsibilities": [
+          "PARA area management",
+          "Project management",
+          "Project task/action management",
+          "Resource management",
+          "Archive/restore resources, areas, and projects",
+          "Timeline and calendar productivity views",
+          "Gemini resource summarization"
+        ]
+      },
+      "fileControl": {
+        "responsibilities": [
+          "Archive classification",
+          "JRA reference",
+          "Physical reference hierarchy",
+          "Archive processing",
+          "Archive details",
+          "Disposition",
+          "Borrowing and return",
+          "Movement log",
+          "Bulk move",
+          "QR generation",
+          "QR and barcode scanning",
+          "Arrangement explorer"
+        ],
+        "recordTypesUsed": [
+          "archive_classification",
+          "archive_jra",
+          "archive_physical_reference",
+          "archive_borrowing",
+          "archive_disposition",
+          "archive_move_log",
+          "para_archive"
+        ]
+      },
+      "settings": {
+        "tabs": [
+          "users",
+          "profile",
+          "app",
+          "ai"
+        ],
+        "responsibilities": [
+          "User management UI",
+          "Profile editing",
+          "App branding settings",
+          "Gemini API key setting",
+          "Global search modal",
+          "Floating chatbot"
+        ]
+      },
+      "resources": {
+        "responsibilities": [
+          "Resource input",
+          "Resource AI metadata modal",
+          "Resource listing",
+          "Linking resources to notes"
+        ]
+      }
+    },
+    "externalAI": {
+      "provider": "Gemini",
+      "currentLocation": "Frontend calls Gemini API directly through callGeminiAI",
+      "model": "gemini-2.5-flash-preview-09-2025",
+      "apiKeySource": "user.apiKey",
+      "knownRisk": "API key is used in browser-side requests; move AI proxying to backend before production or multi-tenant deployment."
+    }
+  },
+  "backendArchitecture": {
+    "globalPrefix": "/api/v1",
+    "bootstrap": {
+      "corsOriginEnv": "CORS_ORIGIN",
+      "defaultCorsOrigin": "http://localhost:5173",
+      "validation": {
+        "whitelist": true,
+        "forbidNonWhitelisted": true,
+        "transform": true
+      },
+      "securityMiddleware": [
+        "helmet"
+      ]
+    },
+    "modules": {
+      "auth": {
+        "controllers": [
+          "POST /auth/login",
+          "POST /auth/refresh",
+          "POST /auth/logout",
+          "GET /auth/me"
+        ],
+        "implementationNotes": [
+          "Login normalizes email to lowercase.",
+          "Password verification uses Argon2.",
+          "Refresh token is JWT signed with refresh secret and stored as Argon2 hash.",
+          "Refresh flow revokes old matching refresh token and creates a new session."
+        ]
+      },
+      "users": {
+        "controllers": [
+          "GET /users",
+          "GET /users/:id",
+          "POST /users",
+          "PATCH /users/:id",
+          "DELETE /users/:id"
+        ],
+        "rolePolicy": {
+          "read": [
+            "super_admin",
+            "admin"
+          ],
+          "write": [
+            "super_admin"
+          ]
+        },
+        "publicUserExcludes": [
+          "passwordHash"
+        ]
+      },
+      "settings": {
+        "controllers": [
+          "GET /settings/app",
+          "PATCH /settings/app"
+        ],
+        "rolePolicy": {
+          "read": "JWT authenticated users",
+          "write": [
+            "super_admin",
+            "admin"
+          ]
+        },
+        "storage": "Single AppSettings row with id global"
+      },
+      "records": {
+        "controllers": [
+          "GET /records/:type",
+          "POST /records/:type",
+          "POST /records/:type/bulk",
+          "PATCH /records/:id",
+          "DELETE /records/:id"
+        ],
+        "storage": "LifeosRecord JSON payload table",
+        "accessPolicy": [
+          "viewer cannot write",
+          "member can access own records",
+          "admin and super_admin can access broader records",
+          "bulkReplace normalizes invalid legacy userId to logged-in user id"
+        ],
+        "softDeleteField": "deletedAt"
+      },
+      "uploads": {
+        "controllers": [
+          "POST /uploads",
+          "GET /uploads",
+          "GET /uploads/:id",
+          "GET /uploads/:id/metadata",
+          "DELETE /uploads/:id"
+        ],
+        "maxUploadBytes": 104857600,
+        "storageFlow": [
+          "Multer memoryStorage receives file",
+          "SHA-256 checksum calculated",
+          "File is saved to S3-compatible object storage",
+          "Asset row and AssetExtraction row are created",
+          "Extraction job is enqueued"
+        ],
+        "objectKeyPattern": "<userId>/<yyyy>/<mm>/<timestamp>-<uuid><extension>"
+      },
+      "storage": {
+        "provider": "S3Client",
+        "bucketEnv": "ASSET_BUCKET",
+        "startupBehavior": "ensureBucket via HeadBucket then CreateBucket"
+      },
+      "extraction": {
+        "queueName": "asset-extraction",
+        "workerConcurrencyEnv": "EXTRACTION_CONCURRENCY",
+        "supportedMimeTypes": [
+          "text/*",
+          "application/json",
+          "application/xml",
+          "application/yaml"
+        ],
+        "resultFields": [
+          "extractedText",
+          "summary",
+          "metadata.extractedCharacters",
+          "completedAt"
+        ],
+        "unsupportedBehavior": "AssetExtraction.status becomes unsupported and Asset.status becomes ready."
+      }
+    }
+  },
+  "database": {
+    "provider": "PostgreSQL",
+    "prismaModels": {
+      "User": {
+        "purpose": "Application users and profile/API key metadata",
+        "relations": [
+          "RefreshToken[]",
+          "LifeosRecord[]",
+          "Upload[]",
+          "Asset[]"
+        ]
+      },
+      "RefreshToken": {
+        "purpose": "Revocable hashed refresh token records",
+        "indexes": [
+          "userId"
+        ]
+      },
+      "AppSettings": {
+        "purpose": "Global branding and login copy",
+        "singletonId": "global"
+      },
+      "LifeosRecord": {
+        "purpose": "Generic JSON storage for migrated frontend domain data",
+        "indexes": [
+          "userId,type",
+          "userId,type,date"
+        ]
+      },
+      "Upload": {
+        "purpose": "Legacy local-file upload metadata retained for backward compatibility",
+        "status": "Legacy; new flow uses Asset"
+      },
+      "Asset": {
+        "purpose": "Object storage metadata",
+        "indexes": [
+          "userId,status",
+          "userId,createdAt",
+          "checksum"
+        ]
+      },
+      "AssetExtraction": {
+        "purpose": "Extraction result and status for Asset",
+        "indexes": [
+          "status"
+        ]
+      }
+    },
+    "migrations": [
+      "20260428104751_init",
+      "20260428142534_uploads_and_bulk_records",
+      "20260428215652_assets_object_storage"
+    ],
+    "seedUsers": [
+      {
+        "email": "admin@lifeos.com",
+        "password": "123",
+        "role": "super_admin"
+      },
+      {
+        "email": "viewer@lifeos.com",
+        "password": "123",
+        "role": "viewer"
+      }
+    ]
+  },
+  "apiContract": {
+    "baseUrl": "http://localhost:4000/api/v1",
+    "authHeader": "Authorization: Bearer <accessToken>",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/health",
+        "auth": false
+      },
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "auth": false,
+        "body": {
+          "email": "string",
+          "password": "string"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/auth/refresh",
+        "auth": false,
+        "body": {
+          "refreshToken": "string"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/auth/logout",
+        "auth": false,
+        "body": {
+          "refreshToken": "string"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/auth/me",
+        "auth": true
+      },
+      {
+        "method": "GET",
+        "path": "/users",
+        "auth": true,
+        "roles": [
+          "super_admin",
+          "admin"
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/users",
+        "auth": true,
+        "roles": [
+          "super_admin"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/settings/app",
+        "auth": true
+      },
+      {
+        "method": "PATCH",
+        "path": "/settings/app",
+        "auth": true,
+        "roles": [
+          "super_admin",
+          "admin"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/records/:type",
+        "auth": true,
+        "query": [
+          "userId",
+          "from",
+          "to"
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/records/:type/bulk",
+        "auth": true,
+        "body": {
+          "items": "array<object>"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/uploads",
+        "auth": true,
+        "body": {
+          "multipartField": "file"
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/uploads",
+        "auth": true,
+        "query": [
+          "take"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/uploads/:id",
+        "auth": true,
+        "responseType": "stream"
+      },
+      {
+        "method": "GET",
+        "path": "/uploads/:id/metadata",
+        "auth": true
+      },
+      {
+        "method": "DELETE",
+        "path": "/uploads/:id",
+        "auth": true
+      }
+    ]
+  },
+  "developmentCommands": {
+    "backend": {
+      "install": "cd backend && npm install",
+      "docker": "cd backend && docker compose up -d",
+      "generate": "cd backend && npm run prisma:generate",
+      "migrate": "cd backend && npm run prisma:migrate",
+      "seed": "cd backend && npm exec prisma db seed",
+      "dev": "cd backend && npm run dev",
+      "lint": "cd backend && npm run lint",
+      "build": "cd backend && npm run build",
+      "validatePrisma": "cd backend && npx prisma validate",
+      "migrationStatus": "cd backend && npx prisma migrate status"
+    },
+    "frontend": {
+      "install": "cd frontend && npm install",
+      "dev": "cd frontend && npm run dev",
+      "lint": "cd frontend && npm run lint",
+      "build": "cd frontend && npm run build",
+      "preview": "cd frontend && npm run preview"
+    }
+  },
+  "knownLimitations": [
+    {
+      "area": "Frontend structure",
+      "description": "Several feature files remain very large after initial refactor, especially FileControlManager and ProductivityManager."
+    },
+    {
+      "area": "Persistence",
+      "description": "Most domain data is stored as JSON payload in LifeosRecord. This is flexible but weak for typed constraints, relational querying, and reporting."
+    },
+    {
+      "area": "Uploads",
+      "description": "Backend uses Multer memoryStorage with 100 MB limit. Large-scale document ingestion should move to streaming or presigned upload."
+    },
+    {
+      "area": "Extraction",
+      "description": "Only text-like MIME types are extracted. PDF, DOCX, XLSX, image OCR, and embedding/indexing are pending."
+    },
+    {
+      "area": "Auth",
+      "description": "Refresh token validation scans active token records and Argon2-verifies each candidate. Add token identifiers for scale."
+    },
+    {
+      "area": "AI",
+      "description": "Gemini requests are made from the frontend with user API key. Backend AI proxying is safer for production."
+    },
+    {
+      "area": "Testing",
+      "description": "No automated backend or frontend test suite exists yet beyond lint/build/manual smoke checks."
+    },
+    {
+      "area": "Encoding",
+      "description": "Some UI strings contain mojibake such as Â© and bullet placeholders."
+    }
+  ],
+  "recommendedNextSteps": [
+    {
+      "priority": "P0",
+      "task": "Add backend integration tests for auth, records, uploads, and role permissions."
+    },
+    {
+      "priority": "P0",
+      "task": "Add frontend API token refresh handling and centralized API error handling."
+    },
+    {
+      "priority": "P0",
+      "task": "Add React error boundaries around lazy feature modules."
+    },
+    {
+      "priority": "P1",
+      "task": "Implement PDF/DOCX/XLSX extraction workers and expose extraction status in Productivity resources."
+    },
+    {
+      "priority": "P1",
+      "task": "Move large upload flow to presigned object-storage URLs."
+    },
+    {
+      "priority": "P1",
+      "task": "Refactor FileControlManager into archive processing, references, transactions, arrangement, and modals."
+    },
+    {
+      "priority": "P1",
+      "task": "Refactor ProductivityManager into overview, projects, areas, resources, archives, and shared modals."
+    },
+    {
+      "priority": "P2",
+      "task": "Introduce typed domain tables for high-query entities when reporting/search requirements become clear."
+    }
+  ],
+  "lastVerification": {
+    "date": "2026-04-29",
+    "commandsPassed": [
+      "backend npm run lint",
+      "backend npm run build",
+      "frontend npm run lint",
+      "frontend npm run build",
+      "npx prisma validate",
+      "npx prisma migrate status"
+    ],
+    "manualSmokeCovered": [
+      "health",
+      "login",
+      "users",
+      "settings",
+      "records",
+      "upload",
+      "extraction",
+      "download",
+      "delete"
+    ]
+  }
+}
